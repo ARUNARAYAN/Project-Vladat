@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vladat - Multi Research Search</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+    background-size: cover;
+    display: flex; /* Use flexbox for body to center the main container */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Use min-height to allow content to grow */
+    padding: 20px; /* Add padding around the main container */
+  }
+
+  /* Main container for rounded corners */
+  .vladat-container {
+    background: rgba(255, 255, 255, 0.9); /* Slightly more opaque for better contrast */
+    border-radius: 20px; /* Rounded corners for the entire main visible area */
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2); /* Enhanced shadow */
+    width: 100%;
+    max-width: 800px; /* Max width for the container */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Ensures child elements respect border-radius */
+    position: relative; /* For header and settings positioning */
+  }
+
+  header {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95); /* Slightly more opaque header */
+    display: flex;
+    justify-content: center; /* Center the logo */
+    align-items: center;
+    padding: 0.8rem 1.5rem; /* Increased padding */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow */
+    position: relative; /* To position the profile button within the header */
+    min-height: 60px; /* Ensure a minimum height for the header */
+  }
+
+  .logo {
+    font-weight: 700;
+    font-size: 1.8rem; /* Slightly larger logo */
+    color: #333;
+    user-select: none;
+  }
+
+  .profile-btn {
+    width: 45px; height: 45px; /* Larger hitbox */
+    border-radius: 50%;
+    background-color: #0078d7; /* Match primary button color */
+    color: white;
+    font-weight: 700;
+    font-size: 26px; /* Larger font */
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    position: absolute; /* Position independently */
+    right: 1.5rem; /* Align to the right */
+    top: 50%;
+    transform: translateY(-50%); /* Center vertically */
+    transition: background-color 0.2s ease;
+  }
+  .profile-btn:hover {
+    background-color: #005ea3; /* Darker blue on hover */
+  }
+
+  #settingsMenu {
+    position: absolute;
+    top: calc(60px + 10px); /* Position below header, with some gap */
+    right: 1.5rem; /* Aligned with profile button */
+    background: white;
+    border: 1px solid #ddd; /* Lighter border */
+    border-radius: 10px; /* Rounded corners for the menu */
+    width: 350px; /* Slightly wider */
+    padding: 1.2rem; /* More padding */
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15); /* Enhanced shadow */
+    display: none;
+    z-index: 101;
+  }
+  #settingsMenu h3 {
+    margin-top: 0;
+    font-size: 1.3rem; /* Larger heading */
+    margin-bottom: 0.8rem;
+    color: #333;
+  }
+  #settingsMenu label {
+    display: block;
+    margin-top: 0.8rem; /* More space */
+    font-weight: 600;
+    color: #555;
+    font-size: 0.95rem;
+  }
+  #settingsMenu input[type="text"] {
+    width: 100%;
+    padding: 8px 10px; /* More padding */
+    margin-top: 5px;
+    border-radius: 6px; /* More rounded */
+    border: 1px solid #bbb; /* Slightly darker border */
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  #settingsMenu input[type="text"]:focus {
+    border-color: #0078d7;
+    box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2);
+  }
+  #searchEnginesList {
+    max-height: 180px; /* Taller list */
+    overflow-y: auto;
+    border: 1px solid #eee; /* Very light border */
+    background-color: #f9f9f9; /* Light background */
+    padding: 0.8rem; /* More padding */
+    margin-top: 0.8rem;
+    border-radius: 8px;
+  }
+  #searchEnginesList label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem; /* More spacing between items */
+    font-weight: normal;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #444;
+    padding: 4px 0; /* Add padding to label for bigger hitbox */
+  }
+  #searchEnginesList input[type="checkbox"] {
+    margin-right: 0.8rem; /* More space */
+    min-width: 20px; /* Ensure checkbox is visible */
+    min-height: 20px; /* Ensure checkbox is visible */
+    cursor: pointer;
+  }
+  #settingsMenu button {
+    margin-top: 1rem;
+    padding: 10px 18px; /* Larger padding */
+    font-size: 1rem;
+    border: none;
+    background-color: #0078d7;
+    color: white;
+    border-radius: 6px; /* More rounded */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  #settingsMenu button:hover {
+    background-color: #005ea3;
+    transform: translateY(-1px); /* Slight lift effect */
+  }
+  #settingsMenu button:active {
+    transform: translateY(0);
+  }
+
+  main {
+    flex: 1; /* Allow main content to grow */
+    width: 100%;
+    max-width: 650px; /* Allow main content to be slightly wider */
+    margin: 2rem auto; /* Center main content within its container */
+    text-align: center;
+    color: #222;
+    user-select: none;
+    padding: 0 20px; /* Padding for content inside main */
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+  }
+
+  form {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.8rem; /* More gap */
+  }
+  #searchInput {
+    font-size: 1.4rem; /* Larger font */
+    padding: 0.8rem 1.5rem; /* More padding */
+    border-radius: 30px;
+    border: 2px solid #999; /* Slightly thicker border */
+    width: 70%;
+    max-width: 500px; /* Allow search input to be wider */
+    outline-offset: 2px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  #searchInput:focus {
+    border-color: #0078d7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.3); /* Focus ring effect */
+  }
+  #submitBtn {
+    background-color: #0078d7;
+    border: none;
+    color: white;
+    padding: 0.8rem 1.8rem; /* Larger padding */
+    font-size: 1.2rem; /* Larger font */
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  #submitBtn:hover {
+    background-color: #005ea3;
+    transform: translateY(-1px);
+  }
+  #submitBtn:active {
+    transform: translateY(0);
+  }
+
+  #engineCheckboxes {
+    margin-top: 1.5rem; /* More space */
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem; /* More gap between checkboxes */
+    flex-wrap: wrap;
+    padding: 0 10px; /* Small padding */
+  }
+  #engineCheckboxes label {
+    cursor: pointer;
+    user-select: none;
+    font-size: 1rem; /* Slightly larger font */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* More space between checkbox and text */
+    padding: 5px 8px; /* Add padding for larger hitbox */
+    border-radius: 8px; /* Rounded corners for individual checkbox labels */
+    transition: background-color 0.2s ease;
+  }
+  #engineCheckboxes label:hover {
+    background-color: rgba(0, 120, 215, 0.05); /* Light hover effect */
+  }
+  #engineCheckboxes input[type="checkbox"] {
+    width: 20px; /* Larger checkbox */
+    height: 20px; /* Larger checkbox */
+    cursor: pointer;
+    /* Optional: custom checkbox styling */
+    appearance: none;
+    -webkit-appearance: none;
+    border: 2px solid #666;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  #engineCheckboxes input[type="checkbox"]:checked {
+    background-color: #0078d7;
+    border-color: #0078d7;
+  }
+  #engineCheckboxes input[type="checkbox"]:checked::after {
+    content: '✔';
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  #engineCheckboxes input[type="checkbox"]:focus {
+    outline: 2px solid rgba(0, 120, 215, 0.4);
+    outline-offset: 2px;
+  }
+
+
+  footer {
+    margin-top: 2rem; /* More space */
+    padding: 1.5rem; /* More padding */
+    font-size: 0.9rem; /* Slightly larger font */
+    color: #555;
+    background: rgba(255, 255, 255, 0.95); /* Consistent background */
+    border-bottom-left-radius: 20px; /* Match container corners */
+    border-bottom-right-radius: 20px;
+    text-align: center;
+  }
+
+  /* Scrollbar for search engines list */
+  #searchEnginesList::-webkit-scrollbar {
+    width: 8px;
+  }
+  #searchEnginesList::-webkit-scrollbar-thumb {
+    background-color: #bbb;
+    border-radius: 4px;
+  }
+  #searchEnginesList::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    body {
+      padding: 10px;
+    }
+    .vladat-container {
+      border-radius: 10px;
+    }
+    header {
+      padding: 0.5rem 1rem;
+    }
+    .logo {
+      font-size: 1.5rem;
+    }
+    .profile-btn {
+      width: 40px; height: 40px;
+      font-size: 22px;
+      right: 1rem;
+    }
+    #settingsMenu {
+      width: 90%;
+      right: 5%;
+      left: 5%;
+      margin: auto; /* Center it */
+      top: calc(50px + 10px);
+    }
+    form {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    #searchInput {
+      width: 90%;
+      max-width: none;
+    }
+    #submitBtn {
+      width: 90%;
+    }
+    #engineCheckboxes {
+      gap: 0.8rem;
+    }
+  }
+
+</style>
+</head>
+<body>
+<div class="vladat-container">
+  <header>
+    <div class="logo">Vladat</div>
+    <div class="profile-btn" id="profileBtn" title="Open Settings">V</div>
+    <div id="settingsMenu" aria-hidden="true" role="dialog" aria-label="Settings Menu">
+      <h3>Settings</h3>
+
+      <label for="profileLetterInput">Profile Letter:</label>
+      <input type="text" id="profileLetterInput" maxlength="1" aria-describedby="profileLetterHelp" />
+      
+      <label for="bgImageInput">Background Image URL or leave blank for default:</label>
+      <input type="text" id="bgImageInput" placeholder="Enter image URL here" />
+      
+      <hr style="margin: 1rem 0; border-color: #eee;" />
+      
+      <h4>Manage Search Engines</h4>
+      <p style="font-size: 0.9rem; color:#666; margin-bottom: 0.8rem;">Use <code style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 4px;">%s</code> where query goes in URL</p>
+      <div id="searchEnginesList" tabindex="0" aria-label="Search Engines List"></div>
+      
+      <label for="newEngineName">Add new search engine name:</label>
+      <input type="text" id="newEngineName" placeholder="Example: MyEngine" />
+      
+      <label for="newEngineURL">Add new search engine URL (with %s):</label>
+      <input type="text" id="newEngineURL" placeholder="https://example.com/search?q=%s" />
+      
+      <button id="addEngineBtn">Add Search Engine</button>
+    </div>
+  </header>
+  <main>
+    <form id="searchForm" role="search" aria-label="Multi-engine research search form">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search research databases..."
+        aria-required="true"
+        aria-label="Search input"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button type="submit" id="submitBtn" aria-label="Submit search">Search</button>
+    </form>
+    <div id="engineCheckboxes" aria-label="Select search engines to include in search">
+      </div>
+  </main>
+  <footer>
+    Powered by Vladat — Multi-Research Search Tool
+  </footer>
+</div>
+
+<script>
+  // Elements
+  const profileBtn = document.getElementById('profileBtn');
+  const settingsMenu = document.getElementById('settingsMenu');
+  const profileLetterInput = document.getElementById('profileLetterInput');
+  const bgImageInput = document.getElementById('bgImageInput');
+  const searchEnginesList = document.getElementById('searchEnginesList');
+  const newEngineName = document.getElementById('newEngineName');
+  const newEngineURL = document.getElementById('newEngineURL');
+  const addEngineBtn = document.getElementById('addEngineBtn');
+  const engineCheckboxes = document.getElementById('engineCheckboxes');
+  const searchForm = document.getElementById('searchForm');
+  const searchInput = document.getElementById('searchInput');
+
+  // Default search engines
+  let searchEngines = [
+    {name:'PubMed', url:'https://pubmed.ncbi.nlm.nih.gov/?term=%s', checked:true},
+    {name:'Google Scholar', url:'https://scholar.google.com/scholar?q=%s', checked:true},
+    {name:'Europe PMC', url:'https://europepmc.org/search?query=%s', checked:true},
+    {name:'Semantic Scholar', url:'https://www.semanticscholar.org/search?q=%s', checked:false},
+    {name:'ClinicalTrials.gov', url:'https://clinicaltrials.gov/ct2/results?term=%s', checked:false},
+    {name:'ScienceDirect', url:'https://www.sciencedirect.com/search?qs=%s', checked:false},
+    {name:'Wiley Online Library', url:'https://onlinelibrary.wiley.com/action/doSearch?AllField=%s', checked:false}
+  ];
+
+  // Render search engines in checkbox area
+  function renderSearchEnginesCheckboxes() {
+    engineCheckboxes.innerHTML = '';
+    searchEngines.forEach((engine, idx) => {
+      const label = document.createElement('label');
+      label.setAttribute('for', `engine_${idx}`);
+      label.textContent = engine.name;
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = `engine_${idx}`;
+      checkbox.checked = engine.checked;
+      checkbox.addEventListener('change', () => {
+        searchEngines[idx].checked = checkbox.checked;
+        saveSearchEngines();
+      });
+      label.prepend(checkbox);
+      engineCheckboxes.appendChild(label);
+    });
+  }
+
+  // Save to localStorage
+  function saveSearchEngines() {
+    localStorage.setItem('searchEngines', JSON.stringify(searchEngines));
+  }
+  function loadSearchEngines() {
+    const saved = localStorage.getItem('searchEngines');
+    if(saved){
+      try {
+        const parsed = JSON.parse(saved);
+        if(Array.isArray(parsed)) {
+          // Merge with default engines to ensure new defaults are added and existing ones are preserved
+          const defaultEngineNames = new Set(searchEngines.map(e => e.name));
+          const loadedEngineNames = new Set(parsed.map(e => e.name));
+
+          // Create a map for quick lookup of loaded engines by name
+          const loadedEnginesMap = new Map();
+          parsed.forEach(engine => loadedEnginesMap.set(engine.name, engine));
+
+          // Initialize merged engines with existing defaults to maintain order for new ones
+          const mergedEngines = [];
+
+          searchEngines.forEach(defaultEngine => {
+            if (loadedEnginesMap.has(defaultEngine.name)) {
+              // If a default engine exists in loaded, use the loaded one (preserving its checked status)
+              mergedEngines.push(loadedEnginesMap.get(defaultEngine.name));
+              loadedEnginesMap.delete(defaultEngine.name); // Remove from map after adding
+            } else {
+              // If it's a default engine not in loaded, add it
+              mergedEngines.push(defaultEngine);
+            }
+          });
+
+          // Add any remaining loaded (custom) engines that weren't in the default list
+          loadedEnginesMap.forEach(engine => mergedEngines.push(engine));
+
+          searchEngines = mergedEngines;
+        }
+      } catch(e) {
+        console.error("Error parsing saved search engines:", e);
+      }
+    }
+  }
+
+
+  // Render list in settings (to delete or toggle)
+  function renderSearchEnginesList() {
+    searchEnginesList.innerHTML = '';
+    if (searchEngines.length === 0) {
+      searchEnginesList.textContent = 'No custom engines added. Default engines are always available.';
+      searchEnginesList.style.color = '#777';
+      searchEnginesList.style.textAlign = 'center';
+      searchEnginesList.style.padding = '1rem';
+      return;
+    }
+    searchEngines.forEach((engine, idx) => {
+      const div = document.createElement('div');
+      div.style.display = 'flex';
+      div.style.justifyContent = 'space-between';
+      div.style.alignItems = 'center';
+      div.style.marginBottom = '0.4rem';
+      div.style.fontSize = '0.9rem';
+      div.style.padding = '0.2rem 0'; /* Ensure padding for consistent height */
+      
+      const label = document.createElement('label');
+      label.style.flex = '1';
+      label.style.cursor = 'pointer';
+      label.style.display = 'flex';
+      label.style.alignItems = 'center';
+      label.style.gap = '0.5rem'; /* Space between checkbox and text */
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = engine.checked;
+      checkbox.style.minWidth = '18px'; /* Ensure checkbox size for consistency */
+      checkbox.style.minHeight = '18px';
+      checkbox.style.marginRight = '0'; /* Remove margin here, use gap on parent label */
+      checkbox.addEventListener('change', () => {
+        searchEngines[idx].checked = checkbox.checked;
+        renderSearchEnginesCheckboxes();
+        saveSearchEngines();
+      });
+      
+      const textSpan = document.createElement('span');
+      textSpan.textContent = `${engine.name} — ${engine.url}`;
+      textSpan.style.flexGrow = '1';
+      textSpan.style.wordBreak = 'break-word'; /* Allow long URLs to break */
+      
+      label.appendChild(checkbox);
+      label.appendChild(textSpan);
+      
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Delete';
+      delBtn.style.background = '#e74c3c'; /* A slightly softer red */
+      delBtn.style.color = 'white';
+      delBtn.style.border = 'none';
+      delBtn.style.borderRadius = '4px';
+      delBtn.style.padding = '4px 8px'; /* Larger padding for hitbox */
+      delBtn.style.cursor = 'pointer';
+      delBtn.style.marginLeft = '10px'; /* Space from text */
+      delBtn.style.flexShrink = '0'; /* Prevent shrinking */
+      delBtn.addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent label click when deleting
+        if(confirm(`Delete search engine "${engine.name}"?`)) {
+          searchEngines.splice(idx, 1);
+          renderSearchEnginesList();
+          renderSearchEnginesCheckboxes();
+          saveSearchEngines();
+        }
+      });
+      
+      div.appendChild(label);
+      div.appendChild(delBtn);
+      searchEnginesList.appendChild(div);
+    });
+  }
+
+  // Add new search engine
+  addEngineBtn.addEventListener('click', () => {
+    const name = newEngineName.value.trim();
+    const url = newEngineURL.value.trim();
+    if(!name || !url) {
+      alert('Please fill both name and URL for the new search engine.');
+      return;
+    }
+    if(!url.includes('%s')){
+      alert('URL must contain "%s" where the query should be inserted.');
+      return;
+    }
+    // Prevent duplicate names
+    if (searchEngines.some(engine => engine.name.toLowerCase() === name.toLowerCase())) {
+        alert('A search engine with this name already exists. Please use a different name.');
+        return;
+    }
+
+    searchEngines.push({name, url, checked:true});
+    newEngineName.value = '';
+    newEngineURL.value = '';
+    renderSearchEnginesList();
+    renderSearchEnginesCheckboxes();
+    saveSearchEngines();
+  });
+
+  // Profile letter input event
+  profileLetterInput.addEventListener('input', () => {
+    const val = profileLetterInput.value.trim().toUpperCase();
+    if(val.length === 1 && /^[A-Z]$/.test(val)) {
+      profileBtn.textContent = val;
+      localStorage.setItem('profileLetter', val);
+    } else if (val === '') { // Allow clearing the input to revert to default 'V'
+      profileBtn.textContent = 'V';
+      localStorage.removeItem('profileLetter');
+    }
+  });
+
+  // Background image input event
+  bgImageInput.addEventListener('change', () => {
+    const url = bgImageInput.value.trim();
+    setBackgroundImage(url);
+    if(url) localStorage.setItem('bgImage', url);
+    else localStorage.removeItem('bgImage');
+  });
+
+  function setBackgroundImage(url) {
+    const bodyStyle = document.body.style;
+    if(url){
+      bodyStyle.backgroundImage = `url('${url}')`;
+      bodyStyle.backgroundSize = 'cover';
+      bodyStyle.backgroundPosition = 'center center';
+      bodyStyle.backgroundAttachment = 'fixed';
+    } else {
+      // Default
+      bodyStyle.backgroundImage = "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')";
+    }
+  }
+
+  // Toggle settings menu
+  profileBtn.addEventListener('click', (event) => {
+    event.stopPropagation(); // Prevent document click from immediately closing it
+    if(settingsMenu.style.display === 'block'){
+      settingsMenu.style.display = 'none';
+      settingsMenu.setAttribute('aria-hidden', 'true');
+    } else {
+      settingsMenu.style.display = 'block';
+      settingsMenu.setAttribute('aria-hidden', 'false');
+      profileLetterInput.focus();
+    }
+  });
+
+  // Close settings menu on click outside
+  document.addEventListener('click', (event) => {
+    if (!settingsMenu.contains(event.target) && !profileBtn.contains(event.target)) {
+      settingsMenu.style.display = 'none';
+      settingsMenu.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  // Load saved data on start
+  window.addEventListener('load', () => {
+    // Profile letter
+    const savedLetter = localStorage.getItem('profileLetter');
+    if(savedLetter) profileBtn.textContent = savedLetter;
+    profileLetterInput.value = savedLetter || ''; // Set input value for profile letter
+
+    // Background image
+    const savedBg = localStorage.getItem('bgImage');
+    if(savedBg) setBackgroundImage(savedBg);
+    bgImageInput.value = savedBg || ''; // Set input value for background image
+
+    // Search engines
+    loadSearchEngines();
+    renderSearchEnginesList();
+    renderSearchEnginesCheckboxes();
+  });
+
+  // Search submit logic
+  searchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const query = encodeURIComponent(searchInput.value.trim());
+
+    if (!query) {
+      alert('Please enter a search query.');
+      return;
+    }
+
+    const selectedEngines = searchEngines.filter(engine => engine.checked);
+
+    if (selectedEngines.length === 0) {
+      // Default to Google Search if none are ticked
+      window.open(`https://www.google.com/search?q=${query}`, '_blank');
+    } else {
+      selectedEngines.forEach(engine => {
+        const searchURL = engine.url.replace('%s', query);
+        window.open(searchURL, '_blank');
+      });
+    }
+  });
+</script>
+</body>
+</html>
